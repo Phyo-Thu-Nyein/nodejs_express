@@ -1,8 +1,8 @@
 const express = require('express');
-const userCtrl = require('./controllers/users.ctrl'); //user ctrl
 const morgan = require('morgan');
 const middlewares = require('./middlewares/logger');
 const toursRouter = require('./routers/tours.router');
+const usersRouter = require('./routers/users.router');
 
 const app = express();
 
@@ -13,6 +13,8 @@ app.use(morgan('dev'));
 //REFACTORING THE CODE
 
 app.use("/api/v1/tours", toursRouter);
+app.use("/api/v1/auth", usersRouter);
+app.use("/api/v1/users", usersRouter);
 
 // app.route('/api/v1/tours')
 //     .get(tourCtrl.getAllTours)
@@ -25,18 +27,18 @@ app.use("/api/v1/tours", toursRouter);
 
 
 //USER ROUTE SECTION
-app.route('/api/v1/users').get(userCtrl.getAllUsers); //get all users
+// app.route('/api/v1/users').get(userCtrl.getAllUsers); //get all users
 
-app.route('/api/v1/auth/register').post(userCtrl.register); // create one user
-app.route('/api/v1/auth/login').post(userCtrl.login); // login 
+// app.route('/api/v1/auth/register').post(userCtrl.register); // create one user
+// app.route('/api/v1/auth/login').post(userCtrl.login); // login 
 
-app.route('/api/v1/users/:id').get(userCtrl.getUserByID); // get one user
-app.route('/api/v1/users/:id').patch(userCtrl.updateUserByID); // edit one user
-app.route('/api/v1/users/:id').delete(userCtrl.deleteUserByID); // delete one user
+// app.route('/api/v1/users/:id').get(userCtrl.getUserByID); // get one user
+// app.route('/api/v1/users/:id').patch(userCtrl.updateUserByID); // edit one user
+// app.route('/api/v1/users/:id').delete(userCtrl.deleteUserByID); // delete one user
 
 
 //listen on server
-app.listen(8000, "127.0.0.1", () => {
+app.listen(8000, "0.0.0.0", () => {
     console.log("server is running on port 8000...");
 });
 
