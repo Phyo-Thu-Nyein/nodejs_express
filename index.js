@@ -1,14 +1,29 @@
 const express = require('express');
 const morgan = require('morgan');
+const dotenv = require('dotenv');
 const middlewares = require('./middlewares/logger');
 const toursRouter = require('./routers/tours.router');
 const usersRouter = require('./routers/users.router');
+var cors = require('cors');
+
+dotenv.config("./env");
 
 const app = express();
 
+console.log(app.get('env')); //express env
+
+console.log(process.env); //node env
+
 app.use(express.json()); //newly added json data undefined //middleware
 app.use(middlewares.myLogger);
-app.use(morgan('dev'));
+
+if (process.env.NODE_ENV == "development") {
+    app.use(morgan('dev'));
+}
+
+app.use(cors({
+    origin: "*",
+}));
 
 //REFACTORING THE CODE
 
@@ -38,8 +53,8 @@ app.use("/api/v1/users", usersRouter);
 
 
 //listen on server
-app.listen(8000, "0.0.0.0", () => {
-    console.log("server is running on port 8000...");
+app.listen(process.env.PORT, "0.0.0.0", () => {
+    console.log(`server is running on port ${process.env.PORT}...`);
 });
 
 

@@ -5,6 +5,26 @@ const fs = require('fs');
 const tours = fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`);
 const jsonTours = JSON.parse(tours); //change to json format
 
+//middleware
+exports.checkID = (req, res, next, val) => {
+    console.log(`Tour id is ${val}`);
+    if (req.params.id * 1 > jsonTours.length) {
+        res.status(404).json({
+            status: "fail", 
+            message : "invalid id",
+        })
+    }
+    next();
+}
+exports.checkBody = (req, res, next) => {
+    if (!req.body.name || !req.body.price || !req.body.duration) {
+        return res.status(400).json({
+            status: "fail",
+            message: "name or pirce or duration fields are missing!",
+        })
+    }
+    next();
+}
 
 exports.healthCheck = (req, res) => {
     res.status(200).send("Hello Tours!!");

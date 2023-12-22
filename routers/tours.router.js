@@ -7,12 +7,19 @@ const toursRouter = express.Router();
 toursRouter
     .route("/")
     .get(tourCtrl.getAllTours)
-    .post(tourCtrl.postNewTour);
+    .post(tourCtrl.checkBody, tourCtrl.postNewTour);
 
 toursRouter
     .route("/:id")
     .get(tourCtrl.findTourByID)
     .patch(tourCtrl.updateTourByID)
     .delete(tourCtrl.deleteTourByID);
+
+// toursRouter.param("id", (req, res, next, val) => {
+//     console.log(`Tour id is ${val}`);
+//     next();
+// });
+
+toursRouter.param("id", tourCtrl.checkID);
 
 module.exports = toursRouter;
