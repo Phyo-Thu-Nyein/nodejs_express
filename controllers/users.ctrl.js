@@ -57,7 +57,7 @@ exports.login = async (req, res) => {
         }
         res.status(200)
         res.json({
-            status: "Success",
+            status: "success",
             message: "You are now logged in!"
         });
     } catch (err) {

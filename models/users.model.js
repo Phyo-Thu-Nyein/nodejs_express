@@ -2,21 +2,22 @@ const mongoose = require('mongoose');
 
 //CREATE A MONGOOSE SCHEMA FOR TOUR COLLECTION (TABLE)
 const userSchema = new mongoose.Schema({
-    email: {
-        type: String,
-        required: true,
-    },
     name: {
         type: String,
         required: true,
     },
-    gender: String,
-    age: Number,
-    phnumber: Number,
+    email: {
+        type: String,
+        required: true,
+    },
     password: {
         type: String,
         required: true,
     },
+    // confirm_password: {
+    //     type: String,
+    //     required: true,
+    // },
 });
 
 //CREATE A MONGOOSE MODEL FOR TOUR COLLECTION (TABLE)
