@@ -1,6 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 const middlewares = require('./middlewares/logger');
 const toursRouter = require('./routers/tours.router');
 const usersRouter = require('./routers/users.router');
@@ -10,9 +11,20 @@ dotenv.config("./env");
 
 const app = express();
 
+mongoose
+    .connect(process.env.DB_URL)
+    .then((connection) => {
+        console.log('database connected');
+        // console.log(connection);
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+
+
 console.log(app.get('env')); //express env
 
-console.log(process.env); //node env
+// console.log(process.env); //node env
 
 app.use(express.json()); //newly added json data undefined //middleware
 app.use(middlewares.myLogger);

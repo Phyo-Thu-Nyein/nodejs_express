@@ -1,93 +1,142 @@
 const fs = require('fs');
-
+const User = require('../models/users.model');
 const users = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/users.json`));
 
 
-exports.getAllUsers = (req, res) => {
-    res.status(200)
-    res.json({
-        status: "success",
-        results: users.length, 
-        data: users,
-    })
+exports.getAllUsers = async (req, res) => {
+    try {
+        const dbUsers = await User.find();
+        res.status(200).json({
+            message: "success",
+            results: dbUsers.length,
+            data: dbUsers,
+        });
+    } catch (err) {
+        res.status(404).json({
+            status: "fail",
+            message: "smth went wrong",
+        });
+    }
 }
 
-exports.register = (req, res) => {
-    const newUser = {
-        id: users.length, 
-        // id: users[users.length - 1].id + 1, 
-        ...req.body, 
+exports.register = async (req, res) => {
+    try {
+        const newUser = await User.create(req.body);
+        res.status(200).json({
+            status: "success",
+            message: "New user registered successfully",
+            data: newUser,
+        });
+    } catch (error) {
+        res.status(200).json({
+            status: "fail",
+            message: "something went wrong",
+            error: error.message,
+        });
     }
-    users.push(newUser); 
+}
 
-    fs.writeFile(`${__dirname}/../dev-data/data/users.json`,
-        JSON.stringify(users),
-        (err) => {
-            if (err) {
-                return res.status(500).json({
-                    status: "fail",
-                    message: "something went wrong",
-                });
-            }
-            res.status(200).json({
-                status: "Success",
-                message: "New user has been added successfully!",
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const oneUser = await User.findOne({email: email}).lean();
+        if (!oneUser) {
+            return res.status(401).json({
+                status: "fail",
+                message: "user not found"
             });
         }
-    );
-}
-
-exports.login = (req, res) => {
-    const { email, password } = req.body;
-    const user = users.find((el) => el.email === email);
-
-    if (!user) {
-        return res.status(200).json({
+        if (oneUser.password !== password) {
+            return res.status(401).json({
+                status: "fail",
+                message: "password incorrect",
+                // pswfrombody: password,
+                // pswfromdb: oneUser.password,
+            });
+        }
+        res.status(200)
+        res.json({
+            status: "Success",
+            message: "You are now logged in!"
+        });
+    } catch (err) {
+        res.status(401).json({
             status: "fail",
-            message: "user not found"
+            message: "smth wrong",
+            error: err.message
         });
     }
-    if (user.password != password) {
-        return res.status(200).json({
-            status: "fail",
-            message: "password incorrect"
+}
+
+exports.getUserByID = async (req, res) => {
+    try {
+        const oneUser = await User.findById(req.params.id);
+        res.status(200).json({
+            message: "success",
+            data: oneUser,
+        });
+    } catch (err) {
+        res.status(404).json({
+            status: 'fail',
+            message: 'Invalid ID',
         });
     }
-    res.status(200)
-    res.json({
-        status: "Success",
-        message: "You are now logged in!"
-    });
 }
 
-exports.getUserByID = (req, res) => {
-    const id = req.params.id;
-
-    const oneUser = users.find((user) => user.id === id);
-
-    if (!oneUser) {
-        return res.status(200).json({
-            status: "Fail",
-            message: "No user with that ID found",
-            data: [], 
+exports.updateUserByID = async (req, res) => {
+    const oneUser = await User.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+    });
+    try {
+        res.status(200).json({
+            message: 'success',
+            data: {
+                oneUser, // Return the Updated Tour
+            },
         });
-    };
-    res.status(200).json({
-        status: "success",
-        data: oneUser,
-    });
+    } catch (err) {
+        res.status(404).json({
+            status: 'fail',
+            message: err,
+        });
+    }
 }
 
-exports.updateUserByID = (req, res) => {
-    res.status(200)
-    res.json({
-        status: "success"
-    })
+exports.deleteUserByID = async (req, res) => {
+    try {
+        const oneUser = await User.findByIdAndDelete(req.params.id);
+        res.status(200).json({
+            message: 'successfully deleted',
+            data: oneUser,
+        });
+    } catch (err) {
+        res.status(404).json({
+            status: 'fail',
+            message: err.message,
+        });
+    }
 }
 
-exports.deleteUserByID = (req, res) => {
-    res.status(200)
-    res.json({
-        status: "success"
-    })
-}
+// exports.login = (req, res) => {
+//     const { email, password } = req.body;
+//     const user = users.find((el) => el.email === email);
+
+//     if (!user) {
+//         return res.status(200).json({
+//             status: "fail",
+//             message: "user not found"
+//         });
+//     }
+//     if (user.password != password) {
+//         return res.status(200).json({
+//             status: "fail",
+//             message: "password incorrect"
+//         });
+//     }
+//     res.status(200)
+//     res.json({
+//         status: "Success",
+//         message: "You are now logged in!"
+//     });
+// }

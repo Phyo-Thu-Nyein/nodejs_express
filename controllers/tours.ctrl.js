@@ -1,17 +1,13 @@
 const { json } = require('express');
-const fs = require('fs');
-
-//read file
-const tours = fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`);
-const jsonTours = JSON.parse(tours); //change to json format
+const Tour = require('../models/tours.model');
 
 //middleware
 exports.checkID = (req, res, next, val) => {
     console.log(`Tour id is ${val}`);
     if (req.params.id * 1 > jsonTours.length) {
         res.status(404).json({
-            status: "fail", 
-            message : "invalid id",
+            status: "fail",
+            message: "invalid id",
         })
     }
     next();
@@ -30,131 +26,87 @@ exports.healthCheck = (req, res) => {
     res.status(200).send("Hello Tours!!");
 }
 
-exports.getAllTours = (req, res) => {
-    res.status(200).json({
-        message: "success",
-        results: jsonTours.length,
-        data: jsonTours,
-    });
+exports.getAllTours = async (req, res) => {
+    try {
+        const dbtours = await Tour.find();
+        res.status(200).json({
+            message: "success",
+            results: dbtours.length,
+            data: dbtours,
+        });
+    } catch (error) {
+        res.status(404).json({
+            status: "fail",
+            message: "smth went wrong"
+        })
+    }
+
 }
 
-exports.postNewTour = (req, res) => {
-    console.log(req.body);
-    const newTour = {
-        id: jsonTours.length,
-        ...req.body,
-    };
-    jsonTours.push(newTour); //adding the newly added json data into the file
+exports.postNewTour = async (req, res) => {
+    try {
+        const newTour = await Tour.create(req.body);
+        res.status(200).json({
+            status: "success",
+            message: "new data has been added successfully!",
+        });
 
-    fs.writeFile(`${__dirname}/../dev-data/data/tours-simple.json`,
-        JSON.stringify(jsonTours),
-        (err) => {
-            if (err) {
-                return res.status(500).json({ //cannot send more than one req, thus "return"
-                    status: "fail",
-                    message: "something went wrong",
-                });
-            }
-            res.status(200).json({
-                status: "success",
-                message: "new data has been added successfully!",
-            });
-        }
-    );
+    } catch (error) {
+        res.status(200).json({
+            status: "fail",
+            message: "something went wrong",
+            error: error.message,
+        });
+    }
 }
 
-exports.findTourByID = (req, res) => {
+exports.findTourByID = async (req, res) => {
     // console.log(req.params);
+    try {
+        const tour = await Tour.findById(req.params.id);
 
-    const id = parseInt(req.params.id);
-
-    const oneTour = jsonTours.find((tour) => tour.id === id);
-
-    if (oneTour) {
-        return res.status(200).json({
-            status: "success",
-            data: oneTour,
+        res.status(200).json({
+            message: 'success',
+            data: tour,
+        });
+    } catch (err) {
+        res.status(404).json({
+            status: 'fail',
+            message: 'Invalid ID',
         });
     }
-    res.status(200).json({
-        status: "success",
-        message: "No tour with that ID found",
-        data: [],
+};
+
+exports.updateTourByID = async (req, res) => {
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
     });
-}
-
-exports.updateTourByID = (req, res) => {
-    // console.log(req.params);
-
-    const id = parseInt(req.params.id);
-    const tourToUpdate = req.body;
-
-    const oneTour = jsonTours.find((tour) => tour.id === id);
-
-    if (!oneTour) {
-        return res.status(200).json({
-            status: "success",
-            message: "No tour with that ID found",
-            data: [],
+    try {
+        res.status(200).json({
+            message: 'success',
+            data: {
+                tour, // Return the Updated Tour
+            },
+        });
+    } catch (err) {
+        res.status(404).json({
+            status: 'fail',
+            message: err,
         });
     }
-
-    const updatedTours = jsonTours.map((tour) => {
-        if (tour.id === id) {
-            return { ...tour, ...tourToUpdate };
-        }
-        return tour;
-    })
-
-    fs.writeFileSync(`${__dirname}/../dev-data/data/tours-simple.json`,
-        JSON.stringify(updatedTours),
-        (err) => {
-            if (err) {
-                return res.status(500).json({ //cannot send more than one req, thus "return"
-                    status: "fail",
-                    message: "something went wrong",
-                });
-            }
-            res.status(200).json({
-                status: "success",
-                message: "The tour is updated successfully",
-            });
-        }
-    );
 }
 
-exports.deleteTourByID = (req, res) => {
-    const id = parseInt(req.params.id);
-    const oneTour = jsonTours.find((tour) => tour.id === id);
-
-    if (!oneTour) {
-        return res.status(200).json({
-            status: "success",
-            message: "No tour with that ID found",
-            data: [],
+exports.deleteTourByID = async(req, res) => {
+    try {
+        await Tour.findByIdAndDelete(req.params.id);
+        res.status(200).json({
+          message: 'successfully deleted',
+          data: null,
         });
-    }
-
-    const index = jsonTours.indexOf(oneTour);
-
-    jsonTours.splice(index, 1);
-
-    fs.writeFileSync(`${__dirname}/../dev-data/data/tours-simple.json`,
-        JSON.stringify(jsonTours),
-        (err) => {
-            if (err) {
-                return res.status(500).json({ //cannot send more than one req, thus "return"
-                    status: "fail",
-                    message: "something went wrong",
-                });
-            }
-            res.status(204).json({
-                status: "success",
-                message: "The tour is deleted successfully",
-                data: null,
-            });
-        }
-    );
-
-
+      } catch (err) {
+        res.status(404).json({
+          status: 'fail',
+          message: err,
+        });
+      }
 }
